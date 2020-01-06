@@ -11,21 +11,23 @@
 #define MSG_SAVE "*** Ok, your progress has been saved. See you later!"
 #define MAX 64
 
+// Data struct with player information. 
+typedef struct playerinfo {
+    char playerName[16];
+    int level;
+    int j50;
+    int j25;
+} PLAYERINFO;
+
 // Function declaration
 void print_menu(void);
 void credits(void);
 void current_status(char, int, int, int);
+void question_read(FILE *);
+void new_game(PLAYERINFO *);
 
 // The main function of the program
 int main(int argc, char **argv){
-
-    // Data struct with player information. 
-    typedef struct playerinfo {
-        char playerName[16];
-        int level;
-        int j50;
-        int j25;
-    } PLAYERINFO;
 
     // First arguments
     int seed;
@@ -53,7 +55,14 @@ int main(int argc, char **argv){
 
         else if (argv[1] == "-f"){
             commandCheck = 1;
-            // TODO
+            FILE * fp = fopen(argv[2], "r");
+
+            if (fp == NULL){
+                fprintf(stderr, "Error opening the file.\n");
+                return 1;
+            }
+
+            question_read(fp);
         }
 
         else{
@@ -65,9 +74,17 @@ int main(int argc, char **argv){
             switch (commandCheck)
             {
             case 0:
-                if (argv[3] == "-f")
-                    // TODO -f command
+                if (argv[3] == "-f"){
+                    FILE * fp = fopen(argv[4], "r");
+
+                    if (fp == NULL){
+                        fprintf(stderr, "Error opening the file.\n");
+                        return 1;
+                    }
+
+                    question_read(fp);
                     break;
+                }
             
             case 1:
                 if (argv[3] == "-s"){
@@ -83,26 +100,30 @@ int main(int argc, char **argv){
     print_menu();
 
     // Loop that will verify which inputs the player has inputted and decide what it will do based on that
+    // n, s and r's basic functions are usable for now (you can input names multiple times, save and read successfully)
     while(1){
 
         // Verifies the player input and stores it on the "input"
         fgets(input, 30, stdin);
 
         if (input[0] == 'n'){
-
+ 
             if (input[1] != '\n'){
-                
-                for (idx; input[idx] != '\n'; idx++){
-                    currentUser.playerName[idx] = input[idx + 2];    // Working (i think)
-                }
 
+                for (idx; input[idx + 2] != '\n'; idx++){
+                    currentUser.playerName[idx] = input[idx + 2];    
+                }
+                
+                // In case the previous string was bigger than the new one, it ignores everything beyond (sad for the lost memory doe)
+                currentUser.playerName[idx] = '\0';
+
+                // Zeroes the index so it can be used again.
                 idx = 0;
             
             }
 
             else{
                 strcpy(currentUser.playerName, "newbie");
-                printf("%s\n", currentUser.playerName);
             }
 
             //new_game();
@@ -116,12 +137,15 @@ int main(int argc, char **argv){
             if (input[1] != '\0'){
 
                 // Will fill the fileread
-                for (int idx; input[idx] != '\0'; idx++)
+                for (idx; input[idx + 2] != '\n'; idx++)
                     fileread[idx] = input[idx + 2];
                 }
 
+                fileread[idx] = '\0';
+                idx = 0;
+
                 // Opens the file with the inputted name in read binary mode
-                FILE * fp = fopen("filename", "rb");
+                FILE * fp = fopen(fileread, "rb");
 
                 // Checks if there is any error while opening the file
                 if (fp == NULL){
@@ -149,12 +173,17 @@ int main(int argc, char **argv){
             if (input[1] != '\0'){
 
                 // Will fill the filename
-                for (int idx; input[idx] != '\0'; idx++){
+                for (idx; input[idx + 2] != '\n'; idx++){
                     filename[idx] = input[idx + 2];
                 }
 
+                filename[idx] = '\0';
+                idx = 0;
+
+
                 // Opens/Creates a newfile with the inputted name in write binary mode
-                FILE * fp = fopen("filename", "wb");
+                FILE * fp = fopen(filename, "wb");
+                printf("%s\n", filename);
 
                 // Checks if there is any error while opening the file
                 if (fp == NULL){
@@ -175,17 +204,17 @@ int main(int argc, char **argv){
             }
         }
 
-        else if (input == "h"){
+        else if (input[0] == 'h' && input[1] == '\n'){
             print_menu();
             continue;
         }
 
-        else if (input == "c"){
+        else if (input[0] == 'c' && input[1] == '\n'){
             credits();
             continue;
         }
 
-        else if (input == "q"){
+        else if (input[0] == 'q' && input[1] == '\n'){
             puts(MSG_QUIT);
             return 0;
 
@@ -200,9 +229,10 @@ int main(int argc, char **argv){
     }
 
 // The main function of the game.
-//void new_game(){
+void new_game(PLAYERINFO *currentUser){
+    
     // INCOMPLETE
-//}
+}
 
 // Prints the main menu.
 void print_menu(){
