@@ -23,30 +23,19 @@ typedef struct playerinfo {
 } PLAYERINFO;
 
 // Data struct with question information
-typedef struct {
+typedef struct _node {
     char question[ULTMAX];
     char answers[4][ULTMAX];
-    enum category;
     enum diff {easy, medium, hard} type;
+    struct _node * next;
 } QUESTION;
-
-typedef struct _node * link;
-head = NULL;
-
-typedef struct _node {
-    QUESTION qust;
-    link next;
-} node;
 
 // Function declaration
 void print_menu(void);
 void credits(void);
 void current_status(char, int, int, int);
-void question_read(FILE *, node);
+QUESTION * question_read(FILE *);
 void new_game(PLAYERINFO *);
-int push(link *, QUESTION);
-QUESTION pop(link *);
-int isEmpty(link);
 
 // The main function of the program
 int main(int argc, const char **argv){
@@ -58,7 +47,7 @@ int main(int argc, const char **argv){
     int idx = 0;
     PLAYERINFO currentUser;
     FILE * fp;
-    node questions;
+    QUESTION * questions;
 
     // Verification of the first arguments
     if (argc < 1){
@@ -84,8 +73,17 @@ int main(int argc, const char **argv){
                 fprintf(stderr, "Error opening the file.\n");
                 return 1;
             }
+		
+            questions = question_read(fp); //gives segmentation fault for some godforsaken reason
 
-            question_read(fp, questions); //gives segmentation fault for some godforsaken reason
+			fclose(fp);
+			
+			if (questions->next == NULL){
+				fprintf(stderr,"Something wrong happened.\n");
+				exit(0);
+			}
+
+			printf("%d\n", questions->type);
         }
 
         else{
@@ -100,14 +98,22 @@ int main(int argc, const char **argv){
 		{
 		case 0:
 			if (strcmp(argv[3],"-f") == 0){
-				FILE * fp = fopen(argv[4], "r");
+				FILE * fp = fopen(argv[2], "r");
 
 				if (fp == NULL){
 					fprintf(stderr, "Error opening the file.\n");
 					return 1;
 				}
+			
+				questions = question_read(fp); //gives segmentation fault for some godforsaken reason
 
-				question_read(fp, questions);
+				fclose(fp);
+				
+				if (questions->next == NULL){
+					fprintf(stderr,"Something wrong happened.\n");
+					exit(0);
+				}
+				
 				break;
 			}
 		
@@ -234,7 +240,6 @@ int main(int argc, const char **argv){
         }
 
         else if (input[0] == 'c' && input[1] == '\n'){
-            printf("%s, %s\n",questions.qust.question, questions.next);
             credits();
             continue;
         }
@@ -256,7 +261,6 @@ int main(int argc, const char **argv){
 // The main function of the game.
 void new_game(PLAYERINFO *currentUser){
     
-    // INCOMPLETE
 }
 
 // Prints the main menu.
@@ -284,83 +288,67 @@ void credits(){
     puts("********************************************");
 }
 
-void question_read(FILE * fp, node questions){
+QUESTION * question_read(FILE * fp){
 
 	char * question_vect;
     question_vect = (char *) malloc(10*sizeof(char));
-	int dog;
+    QUESTION * head = NULL;
+	head = (QUESTION *) malloc(sizeof(QUESTION));
+    QUESTION * new;
 
     while (fgets(question_vect, ULTMAX, fp) != NULL){
         if (question_vect[0] == ';'){
             continue;
         }
         if (question_vect[0] == 'Q'){
-
+            
             // Coloca o endereço de memória do node da questão a estrutura de dados da função
-            push(head, questions.qust); // deixa o ponteiro null, tem que ver oq colocar ao inves de and questions
+            new = (QUESTION *) malloc(sizeof(QUESTION));
+            new->next = NULL;
 
             // Passa linhas e copia cada uma das coisas pra seus respectivos lugares
-            strcpy(questions.qust.question, question_vect + 9); 
+            strcpy(new->question, question_vect + 9); 
             strcpy(question_vect, "");
             fgets(question_vect, ULTMAX, fp);
-            strcpy(questions.qust.answers[0], question_vect + 8); 
+            strcpy(new->answers[0], question_vect + 8); 
             strcpy(question_vect, "");
             fgets(question_vect, ULTMAX, fp);
-            strcpy(questions.qust.answers[1], question_vect + 8);
+            strcpy(new->answers[1], question_vect + 8);
             strcpy(question_vect, "");
             fgets(question_vect, ULTMAX, fp);
-            strcpy(questions.qust.answers[2], question_vect + 8);
+            strcpy(new->answers[2], question_vect + 8);
             strcpy(question_vect, "");
             fgets(question_vect, ULTMAX, fp);
-            strcpy(questions.qust.answers[3], question_vect + 8);
+            strcpy(new->answers[3], question_vect + 8);
             strcpy(question_vect, "");
-			printf("%s", questions.qust.question); 
-			printf("%s", questions.qust.answers[0]); 
-			printf("%s", questions.qust.answers[1]); 
-			printf("%s", questions.qust.answers[2]);
-			printf("%s", questions.next);
-            //fgets(question_vect, ULTMAX, fp);
+			printf("%s", new->question); 
+			printf("%s", new->answers[0]); 
+			printf("%s", new->answers[1]); 
+			printf("%s", new->answers[2]);
+			printf("%s", new->answers[3]);
+            fgets(question_vect, ULTMAX, fp);  // pra nao zuar as coisas
+			strcpy(new->type, question_vect + 11);
+			
             //falta enum types 
+
+            if (head == NULL){
+                head = new;
+            }
+            
+			else{
+				new->next = head;
+				head = new;
+			}
         }
+
     }
 
     free(question_vect);
+	return new;
 
 }
 
-int push(link * head, QUESTION q){
-    link x = malloc(sizeof(node));
-    if (x == NULL){
-        fprintf(stderr, "Out of Memory!!\n");
-        return 0;
-    }
 
-    x-> qust = q;
-    x-> next = *head;
-
-    *head = x;
-	free(x);
-    return 1;
-}
-
-QUESTION pop(link * head){
-    QUESTION x;
-    link aux = *head;
-
-    if (isEmpty(*head)){
-        fprintf(stderr, "Stack is empty!!\n");
-        exit(1);
-    }
-
-    x = aux -> qust;
-    *head = aux -> next;
-
-    free(aux);
-}
-
-int isEmpty(link l){
-    return l = NULL;
-}
 void current_status(char name, int level, int joker50, int joker25){
     char jokerFiftyMessage[3], jokerTwentyMessage[3];
 
