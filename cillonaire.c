@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
+#include <time.h>
 
 // Text definition
 #define MSG_ARG_ERROR1 "Too many arguments, only -s and -f supported."
@@ -10,6 +12,7 @@
 #define MSG_ILLEGAL "*** Illegal move"
 #define MSG_SAVE "*** Ok, your progress has been saved. See you later!"
 #define MAX 64
+#define ULTMAX 128
 
 // Data struct with player information. 
 typedef struct playerinfo {
@@ -19,15 +22,34 @@ typedef struct playerinfo {
     int j25;
 } PLAYERINFO;
 
+// Data struct with question information
+typedef struct {
+    char question[ULTMAX];
+    char answers[4][ULTMAX];
+    enum category;
+    enum diff {easy, medium, hard} type;
+} QUESTION;
+
+typedef struct _node * link;
+head = NULL;
+
+typedef struct _node {
+    QUESTION qust;
+    link next;
+} node;
+
 // Function declaration
 void print_menu(void);
 void credits(void);
 void current_status(char, int, int, int);
-void question_read(FILE *);
+void question_read(FILE *, node);
 void new_game(PLAYERINFO *);
+int push(link *, QUESTION);
+QUESTION pop(link *);
+int isEmpty(link);
 
 // The main function of the program
-int main(int argc, char **argv){
+int main(int argc, const char **argv){
 
     // First arguments
     int seed;
@@ -36,24 +58,25 @@ int main(int argc, char **argv){
     int idx = 0;
     PLAYERINFO currentUser;
     FILE * fp;
+    node questions;
 
     // Verification of the first arguments
     if (argc < 1){
         srand(time(0));
     }
-    if (argc > 4){
+    if (argc > 5){
         puts(MSG_ARG_ERROR1);
         exit(0);
     }
     if (argc > 1){
 
-        if (argv[1] == "-s"){
+        if (strcmp(argv[1],"-s") == 0){
             seed = atoi(argv[2]);
             commandCheck = 0;
             srand(seed);
         }
 
-        else if (argv[1] == "-f"){
+        else if (strcmp(argv[1],"-f") == 0){
             commandCheck = 1;
             FILE * fp = fopen(argv[2], "r");
 
@@ -62,39 +85,40 @@ int main(int argc, char **argv){
                 return 1;
             }
 
-            question_read(fp);
+            question_read(fp, questions); //gives segmentation fault for some godforsaken reason
         }
 
         else{
             puts(MSG_ARG_ERROR2);
             exit(0);
         }
+	}
 
-        if (argv > 2){
-            switch (commandCheck)
-            {
-            case 0:
-                if (argv[3] == "-f"){
-                    FILE * fp = fopen(argv[4], "r");
+	if (argc > 3){
 
-                    if (fp == NULL){
-                        fprintf(stderr, "Error opening the file.\n");
-                        return 1;
-                    }
+		switch (commandCheck)
+		{
+		case 0:
+			if (strcmp(argv[3],"-f") == 0){
+				FILE * fp = fopen(argv[4], "r");
 
-                    question_read(fp);
-                    break;
-                }
-            
-            case 1:
-                if (argv[3] == "-s"){
-                    seed = atoi(argv[4]);
-                    srand(seed);
-                    break;
-                }
-            }
-        }
-    }
+				if (fp == NULL){
+					fprintf(stderr, "Error opening the file.\n");
+					return 1;
+				}
+
+				question_read(fp, questions);
+				break;
+			}
+		
+		case 1:
+			if (strcmp(argv[3],"-s") == 0){
+				seed = atoi(argv[4]);
+				srand(seed);
+				break;
+			}
+		}
+	}
     
     // Prints the starting menu
     print_menu();
@@ -210,6 +234,7 @@ int main(int argc, char **argv){
         }
 
         else if (input[0] == 'c' && input[1] == '\n'){
+            printf("%s, %s\n",questions.qust.question, questions.next);
             credits();
             continue;
         }
@@ -259,6 +284,83 @@ void credits(){
     puts("********************************************");
 }
 
+void question_read(FILE * fp, node questions){
+
+	char * question_vect;
+    question_vect = (char *) malloc(10*sizeof(char));
+	int dog;
+
+    while (fgets(question_vect, ULTMAX, fp) != NULL){
+        if (question_vect[0] == ';'){
+            continue;
+        }
+        if (question_vect[0] == 'Q'){
+
+            // Coloca o endereço de memória do node da questão a estrutura de dados da função
+            push(head, questions.qust); // deixa o ponteiro null, tem que ver oq colocar ao inves de and questions
+
+            // Passa linhas e copia cada uma das coisas pra seus respectivos lugares
+            strcpy(questions.qust.question, question_vect + 9); 
+            strcpy(question_vect, "");
+            fgets(question_vect, ULTMAX, fp);
+            strcpy(questions.qust.answers[0], question_vect + 8); 
+            strcpy(question_vect, "");
+            fgets(question_vect, ULTMAX, fp);
+            strcpy(questions.qust.answers[1], question_vect + 8);
+            strcpy(question_vect, "");
+            fgets(question_vect, ULTMAX, fp);
+            strcpy(questions.qust.answers[2], question_vect + 8);
+            strcpy(question_vect, "");
+            fgets(question_vect, ULTMAX, fp);
+            strcpy(questions.qust.answers[3], question_vect + 8);
+            strcpy(question_vect, "");
+			printf("%s", questions.qust.question); 
+			printf("%s", questions.qust.answers[0]); 
+			printf("%s", questions.qust.answers[1]); 
+			printf("%s", questions.qust.answers[2]);
+			printf("%s", questions.next);
+            //fgets(question_vect, ULTMAX, fp);
+            //falta enum types 
+        }
+    }
+
+    free(question_vect);
+
+}
+
+int push(link * head, QUESTION q){
+    link x = malloc(sizeof(node));
+    if (x == NULL){
+        fprintf(stderr, "Out of Memory!!\n");
+        return 0;
+    }
+
+    x-> qust = q;
+    x-> next = *head;
+
+    *head = x;
+	free(x);
+    return 1;
+}
+
+QUESTION pop(link * head){
+    QUESTION x;
+    link aux = *head;
+
+    if (isEmpty(*head)){
+        fprintf(stderr, "Stack is empty!!\n");
+        exit(1);
+    }
+
+    x = aux -> qust;
+    *head = aux -> next;
+
+    free(aux);
+}
+
+int isEmpty(link l){
+    return l = NULL;
+}
 void current_status(char name, int level, int joker50, int joker25){
     char jokerFiftyMessage[3], jokerTwentyMessage[3];
 
