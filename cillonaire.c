@@ -16,7 +16,7 @@
 
 // Data struct with player information. 
 typedef struct playerinfo {
-    char playerName[16];
+    char playerName[ULTMAX];
     int level;
     int j50;
     int j25;
@@ -26,16 +26,16 @@ typedef struct playerinfo {
 typedef struct _node {
     char question[ULTMAX];
     char answers[4][ULTMAX];
-    enum diff {easy, medium, hard} type;
+    enum {easy, medium, hard} type;
     struct _node * next;
 } QUESTION;
 
 // Function declaration
 void print_menu(void);
 void credits(void);
-void current_status(char, int, int, int);
+void current_status(char *, int, int, int);
 QUESTION * question_read(FILE *);
-void new_game(PLAYERINFO *);
+void new_game(PLAYERINFO *, QUESTION *);
 
 // The main function of the program
 int main(int argc, const char **argv){
@@ -141,7 +141,7 @@ int main(int argc, const char **argv){
             if (input[1] != '\n'){
 
                 for (idx; input[idx + 2] != '\n'; idx++){
-                    currentUser.playerName[idx] = input[idx + 2];    
+                    currentUser.playerName[idx] = input[idx + 2];  
                 }
                 
                 // In case the previous string was bigger than the new one, it ignores everything beyond (sad for the lost memory doe)
@@ -155,8 +155,9 @@ int main(int argc, const char **argv){
             else{
                 strcpy(currentUser.playerName, "newbie");
             }
-
-            //new_game();
+			currentUser.j50 = 1;
+			currentUser.j25 = 1;
+            new_game(&currentUser, question_read);
         }
 
         else if (input[0] == 'r'){
@@ -190,8 +191,8 @@ int main(int argc, const char **argv){
                 fread(&currentUser.j25, sizeof(currentUser.j25), 1, fp);
                 fclose(fp);
 
-                printf("*** Ok %s, where were we? Oh there you go:", currentUser.playerName);
-                //new_game();
+                printf("*** Ok %s, where were we? Oh there you go:\n", currentUser.playerName);
+                new_game(&currentUser, question_read);
             }
         
 
@@ -259,8 +260,12 @@ int main(int argc, const char **argv){
     }
 
 // The main function of the game.
-void new_game(PLAYERINFO *currentUser){
-    
+void new_game(PLAYERINFO * currentUser, QUESTION * question_read){
+	printf("*** Hi %s, let's get started!\n");
+    current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+
+	
+	
 }
 
 // Prints the main menu.
@@ -321,15 +326,16 @@ QUESTION * question_read(FILE * fp){
             fgets(question_vect, ULTMAX, fp);
             strcpy(new->answers[3], question_vect + 8);
             strcpy(question_vect, "");
-			printf("%s", new->question); 
-			printf("%s", new->answers[0]); 
-			printf("%s", new->answers[1]); 
-			printf("%s", new->answers[2]);
-			printf("%s", new->answers[3]);
             fgets(question_vect, ULTMAX, fp);  // pra nao zuar as coisas
-			strcpy(new->type, question_vect + 11);
-			
-            //falta enum types 
+			strcpy(question_vect, "");
+			fgets(question_vect, ULTMAX, fp);
+			if (strcmp(question_vect, "DIFFICULTY=easy\n")== 0)
+				new->type = easy;
+			else if (strcmp(question_vect, "DIFFICULTY=medium\n") == 0)
+				new->type = medium;
+			else
+				new->type = hard;
+			strcpy(question_vect, "");
 
             if (head == NULL){
                 head = new;
@@ -349,22 +355,27 @@ QUESTION * question_read(FILE * fp){
 }
 
 
-void current_status(char name, int level, int joker50, int joker25){
-    char jokerFiftyMessage[3], jokerTwentyMessage[3];
+void current_status(char * name, int level, int joker50, int joker25){
+    char jokerFiftyMessage[4], jokerTwentyMessage[4];
 
     if (joker50 == 0){
         strcpy(jokerFiftyMessage, "NO");}
     else{
         strcpy(jokerFiftyMessage, "YES");}
+
     if (joker25 == 0){
         strcpy(jokerTwentyMessage, "NO");}
     else{
         strcpy(jokerTwentyMessage, "YES");}
 
+	int width_name = sizeof(name);
+	int width_j50 = sizeof(jokerFiftyMessage);
+	int width_j25 = sizeof(jokerTwentyMessage);
+
     puts("********************************************");
-    printf("*** Name: %02s                             *\n", name);
-    printf("*** Level: %02d                            *\n", level);
-    printf("*** j50: %02s                              *\n", jokerFiftyMessage);
-    printf("*** j25: %02s                              *\n", jokerTwentyMessage);
+    printf("*** Name: %-20s             *\n", name);
+    printf("*** Level: %02d                              *\n", level);
+    printf("*** j50: %-10s                        *\n", jokerFiftyMessage);
+    printf("*** j25: %-10s                        *\n", jokerTwentyMessage);
     puts("********************************************");
 }
