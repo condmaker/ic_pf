@@ -157,7 +157,7 @@ int main(int argc, const char **argv){
             }
 			currentUser.j50 = 1;
 			currentUser.j25 = 1;
-            new_game(&currentUser, question_read);
+            new_game(&currentUser, questions);
         }
 
         else if (input[0] == 'r'){
@@ -192,7 +192,7 @@ int main(int argc, const char **argv){
                 fclose(fp);
 
                 printf("*** Ok %s, where were we? Oh there you go:\n", currentUser.playerName);
-                new_game(&currentUser, question_read);
+                new_game(&currentUser, questions);
             }
         
 
@@ -261,9 +261,43 @@ int main(int argc, const char **argv){
 
 // The main function of the game.
 void new_game(PLAYERINFO * currentUser, QUESTION * question_read){
-	printf("*** Hi %s, let's get started!\n");
+	printf("*** Hi %s, let's get started!\n", currentUser->playerName);
     current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+    char optionVect[4] = {'A', 'B', 'C', 'D'};
 
+    int r = rand() % 4;
+
+    if (r == 1){
+        printf("*** Question: %s", question_read->question);
+        printf("*** %c: %s", optionVect[0], question_read->answers[0]);
+        printf("*** %c: %s", optionVect[1], question_read->answers[1]);
+        printf("*** %c: %s", optionVect[2], question_read->answers[2]);
+        printf("*** %c: %s", optionVect[3], question_read->answers[3]);
+    }
+
+    if (r == 2){
+        printf("*** Question: %s", question_read->question);
+        printf("*** %c: %s", optionVect[0], question_read->answers[1]);
+        printf("*** %c: %s", optionVect[1], question_read->answers[0]);
+        printf("*** %c: %s", optionVect[2], question_read->answers[2]);
+        printf("*** %c: %s", optionVect[3], question_read->answers[3]);
+    }
+
+    if (r == 3){
+        printf("*** Question: %s", question_read->question);
+        printf("*** %c: %s", optionVect[0], question_read->answers[1]);
+        printf("*** %c: %s", optionVect[1], question_read->answers[2]);
+        printf("*** %c: %s", optionVect[2], question_read->answers[0]);
+        printf("*** %c: %s", optionVect[3], question_read->answers[3]);
+    }
+
+    if (r == 4){
+        printf("*** Question: %s", question_read->question);
+        printf("*** %c: %s", optionVect[0], question_read->answers[1]);
+        printf("*** %c: %s", optionVect[1], question_read->answers[2]);
+        printf("*** %c: %s", optionVect[2], question_read->answers[3]);
+        printf("*** %c: %s", optionVect[3], question_read->answers[0]);
+    }
 	
 	
 }
@@ -307,11 +341,11 @@ QUESTION * question_read(FILE * fp){
         }
         if (question_vect[0] == 'Q'){
             
-            // Coloca o endereço de memória do node da questão a estrutura de dados da função
+            // Inputs the memory address of the QUESTION node in the data struct of the function
             new = (QUESTION *) malloc(sizeof(QUESTION));
             new->next = NULL;
 
-            // Passa linhas e copia cada uma das coisas pra seus respectivos lugares
+            // Reads lines and copies each of them to their respective places
             strcpy(new->question, question_vect + 9); 
             strcpy(question_vect, "");
             fgets(question_vect, ULTMAX, fp);
@@ -326,7 +360,7 @@ QUESTION * question_read(FILE * fp){
             fgets(question_vect, ULTMAX, fp);
             strcpy(new->answers[3], question_vect + 8);
             strcpy(question_vect, "");
-            fgets(question_vect, ULTMAX, fp);  // pra nao zuar as coisas
+            fgets(question_vect, ULTMAX, fp); 
 			strcpy(question_vect, "");
 			fgets(question_vect, ULTMAX, fp);
 			if (strcmp(question_vect, "DIFFICULTY=easy\n")== 0)
@@ -354,7 +388,7 @@ QUESTION * question_read(FILE * fp){
 
 }
 
-
+// Function that observes and prints the status of the player
 void current_status(char * name, int level, int joker50, int joker25){
     char jokerFiftyMessage[4], jokerTwentyMessage[4];
 
@@ -367,10 +401,6 @@ void current_status(char * name, int level, int joker50, int joker25){
         strcpy(jokerTwentyMessage, "NO");}
     else{
         strcpy(jokerTwentyMessage, "YES");}
-
-	int width_name = sizeof(name);
-	int width_j50 = sizeof(jokerFiftyMessage);
-	int width_j25 = sizeof(jokerTwentyMessage);
 
     puts("********************************************");
     printf("*** Name: %-20s             *\n", name);
