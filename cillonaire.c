@@ -34,6 +34,7 @@ typedef struct questvalue {
     QUESTION * qv;
     QUESTION * head;
 } questvalue;
+
 // Function declaration
 void print_menu(void);
 void credits(void);
@@ -82,7 +83,7 @@ int main(int argc, const char **argv){
 
 			fclose(fp);
 			
-			if (questions.qv->next == NULL){
+			if (questions.qv->next != NULL){
 				fprintf(stderr,"Something wrong happened.\n");
 				exit(0);
 			}
@@ -112,7 +113,7 @@ int main(int argc, const char **argv){
 
 				fclose(fp);
 				
-				if (questions.qv->next == NULL){
+				if (questions.qv->next != NULL){
 					fprintf(stderr,"Something wrong happened.\n");
 					exit(0);
 				}
@@ -265,22 +266,20 @@ int main(int argc, const char **argv){
 // The main function of the game.
 void new_game(PLAYERINFO * currentUser, questvalue question_read){
 
-    if (currentUser->level == 0 || currentUser->level == 500)
-
     // Prints the player's status and greets him.
-	printf("*** Hi %s, let's get started!\n", currentUser->playerName);
+	  printf("*** Hi %s, let's get started!\n", currentUser->playerName);
     current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
 
     // Main variables
-    char optionVect[4] = {'A', 'B', 'C', 'D'};
+    char optionVect[4][2] = {"A", "B", "C", "D"};
     QUESTION * aux;
     int r = rand() % 4;
     char playerInput;
     int levels[] = {0, 500, 1000, 2000, 5000, 10000, 20000, 50000, 100000};
     int lvliter = 0;
+    int erriter = 0;
 
     for(aux = question_read.head; aux != NULL ; aux = aux ->next){
-
         // Verifies the player level and checks if the question difficulty type is the same
         if (currentUser->level == 0 || currentUser->level == 500 || currentUser->level == 1000)
             if (aux->type == 0)
@@ -301,70 +300,176 @@ void new_game(PLAYERINFO * currentUser, questvalue question_read){
         // Orders the question based on the random (0-4) variable 'r'
         if (r == 0){
             printf("*** Question: %s", aux->question);
-            printf("*** %c: %s", optionVect[0], aux->answers[0]);
-            printf("*** %c: %s", optionVect[1], aux->answers[1]);
-            printf("*** %c: %s", optionVect[2], aux->answers[2]);
-            printf("*** %c: %s", optionVect[3], aux->answers[3]);
+            printf("*** %s: %s", optionVect[0], aux->answers[0]);
+            printf("*** %s: %s", optionVect[1], aux->answers[1]);
+            printf("*** %s: %s", optionVect[2], aux->answers[2]);
+            printf("*** %s: %s", optionVect[3], aux->answers[3]);
         }
 
         if (r == 1){
             printf("*** Question: %s", aux->question);
-            printf("*** %c: %s", optionVect[0], aux->answers[1]);
-            printf("*** %c: %s", optionVect[1], aux->answers[0]);
-            printf("*** %c: %s", optionVect[2], aux->answers[2]);
-            printf("*** %c: %s", optionVect[3], aux->answers[3]);
+            printf("*** %s: %s", optionVect[0], aux->answers[1]);
+            printf("*** %s: %s", optionVect[1], aux->answers[0]);
+            printf("*** %s: %s", optionVect[2], aux->answers[2]);
+            printf("*** %s: %s", optionVect[3], aux->answers[3]);
         }
 
         if (r == 2){
             printf("*** Question: %s", aux->question);
-            printf("*** %c: %s", optionVect[0], aux->answers[1]);
-            printf("*** %c: %s", optionVect[1], aux->answers[2]);
-            printf("*** %c: %s", optionVect[2], aux->answers[0]);
-            printf("*** %c: %s", optionVect[3], aux->answers[3]);
+            printf("*** %s: %s", optionVect[0], aux->answers[1]);
+            printf("*** %s: %s", optionVect[1], aux->answers[2]);
+            printf("*** %s: %s", optionVect[2], aux->answers[0]);
+            printf("*** %s: %s", optionVect[3], aux->answers[3]);
         }
 
         if (r == 3){
             printf("*** Question: %s", aux->question);
-            printf("*** %c: %s", optionVect[0], aux->answers[1]);
-            printf("*** %c: %s", optionVect[1], aux->answers[2]);
-            printf("*** %c: %s", optionVect[2], aux->answers[3]);
-            printf("*** %c: %s", optionVect[3], aux->answers[0]);
+            printf("*** %s: %s", optionVect[0], aux->answers[1]);
+            printf("*** %s: %s", optionVect[1], aux->answers[2]);
+            printf("*** %s: %s", optionVect[2], aux->answers[3]);
+            printf("*** %s: %s", optionVect[3], aux->answers[0]);
         }
 
         // Stops the flow of questions for the time being
 
         fgets(playerInput, 30, stdin);
 
-        switch (r)
-        {
+        switch (r){
         case 0:
             if (strcmp(toupper(playerInput),optionVect[0]) == 0){
                 puts("*** Hooray!");
                 lvliter += 1;
                 currentUser->level = levels[lvliter];
+
+                if (erriter == 1)
+                    erriter = 0;
+                
+                if (currentUser->level == levels[8]){
+                  puts("*** This is incredible! You have won!");
+                  printf("*** Congratulations %s!\n", currentUser->playerName);
+                  exit(0);
+                }
+                    
                 current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
             }
             else{
                 puts("*** Woops... That's not correct.");
-                //inc
+                printf("*** The correct answer was %s: %s\n", optionVect[0], aux->answers[0]);
+                erriter += 1;
+                lvliter -= 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 2){
+                    puts("*** Sorry, you have lost the game. Bye!");
+                    exit(0);
+                }
+
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+                
             }
             break;
         
         case 1:
-            if (strcmp(toupper(playerInput),optionVect[1]) == 0)
+            if (strcmp(toupper(playerInput),optionVect[1]) == 0){
+              puts("*** Hooray!");
+                lvliter += 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 1)
+                    erriter = 0;
+                
+                if (currentUser->level == levels[8]){
+                  puts("*** This is incredible! You have won!");
+                  printf("*** Congratulations %s!\n", currentUser->playerName);
+                  exit(0);
+                }
+
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+            }
+            else{
+                puts("*** Woops... That's not correct.");
+                printf("*** The correct answer was %s: %s\n", optionVect[1], aux->answers[0]);
+                erriter += 1;
+                lvliter -= 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 2){
+                    puts("*** Sorry, you have lost the game. Bye!");
+                    exit(0);
+                }
+
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25); 
+            }
             break;
 
         case 2:
-            if (strcmp(toupper(playerInput),optionVect[2]) == 0)
+            if (strcmp(toupper(playerInput),optionVect[2]) == 0){
+            puts("*** Hooray!");
+                lvliter += 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 1)
+                    erriter = 0;
+                
+                if (currentUser->level == levels[8]){
+                  puts("*** This is incredible! You have won!");
+                  printf("*** Congratulations %s!\n", currentUser->playerName);
+                  exit(0);
+                }
+                
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+            }
+            else{
+                puts("*** Woops... That's not correct.");
+                printf("*** The correct answer was %s: %s\n", optionVect[2], aux->answers[0]);
+                erriter += 1;
+                lvliter -= 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 2){
+                    puts("*** Sorry, you have lost the game. Bye!");
+                    exit(0);
+                }
+
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+            }
             break;
         
         case 3:
-            if (strcmp(toupper(playerInput),optionVect[3]) == 0)
+            if (strcmp(toupper(playerInput),optionVect[3]) == 0){
+              puts("*** Hooray!");
+                lvliter += 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 1)
+                    erriter = 0;
+
+                if (currentUser->level == levels[8]){
+                  puts("*** This is incredible! You have won!");
+                  printf("*** Congratulations %s!\n", currentUser->playerName);
+                  exit(0);
+                }
+                    
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+            }
+            else{
+                puts("*** Woops... That's not correct.");
+                printf("*** The correct answer was %s: %s\n", optionVect[0], aux->answers[0]);
+                erriter += 1;
+                lvliter -= 1;
+                currentUser->level = levels[lvliter];
+
+                if (erriter == 2){
+                    puts("*** Sorry, you have lost the game. Bye!");
+                    exit(0);
+                }
+
+                current_status(currentUser->playerName, currentUser->level, currentUser->j50, currentUser->j25);
+            }
             break;
         }
 
-    }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-	
+    }                                                                                                                                                                                                                                                             
 }
 
 // Prints the main menu.
@@ -396,8 +501,12 @@ questvalue question_read(FILE * fp){
 
 	char * question_vect;
     question_vect = (char *) malloc(10*sizeof(char));
-    QUESTION * head = NULL;
-	head = (QUESTION *) malloc(sizeof(QUESTION));
+    QUESTION * head;
+    QUESTION * tail;
+	  head = (QUESTION *) malloc(sizeof(QUESTION));
+    tail = (QUESTION *) malloc(sizeof(QUESTION));
+    head = NULL;
+    tail = NULL;
     QUESTION * new;
     questvalue questionstruct;
 
@@ -427,8 +536,9 @@ questvalue question_read(FILE * fp){
             strcpy(new->answers[3], question_vect + 8);
             strcpy(question_vect, "");
             fgets(question_vect, ULTMAX, fp); 
-			strcpy(question_vect, "");
-			fgets(question_vect, ULTMAX, fp);
+            strcpy(question_vect, "");
+            fgets(question_vect, ULTMAX, fp);
+            
 			if (strcmp(question_vect, "DIFFICULTY=easy\n")== 0)
 				new->type = easy;
 			else if (strcmp(question_vect, "DIFFICULTY=medium\n") == 0)
@@ -439,16 +549,21 @@ questvalue question_read(FILE * fp){
 
             if (head == NULL){
                 head = new;
+                tail = new;
             }
             
-			else{
-				new->next = head;
-				head = new;
-			}
+            else{
+              tail->next = new;
+              new->next = NULL;
+              tail = new;
+              //new->next = head;
+              //head = new;
+            }
         }
 
     }
-
+    
+    free(tail);
     free(question_vect);
     questionstruct.head = head;
     questionstruct.qv = new;
