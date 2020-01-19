@@ -134,3 +134,5 @@ A complexidade do programa relativa aos outros programas já feitos por mim tamb
 Aqui estarão as referências utilizadas para criação do programa.
 
 A implementação da lista ligada em formato FIFO (first in first out), junto com o TAIL, foi pensada junto com o aluno da Universidade Lusófona Daniel Fernandes. E a criação do algorítmo para implentação do número random de 0 à 4 para definir a posição das respostas foi do grupo *#DreamTeam*, neste mesmo trabalho final para a Universidade Lusófona.
+
+As bibliotécas utilizadas foram: <stdio.h>, <stdlib.h>, <string.h>, <math.h>, <time.h>.
